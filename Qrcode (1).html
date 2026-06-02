@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QR Master - All-in-One Tool Suite</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.4.4/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #165DFF; --primary-gradient: linear-gradient(135deg, #165DFF 0%, #0045E4 100%);
+            --light: #4080FF; --dark: #0F48C9;
+            --secondary: #36CFC9; --secondary-gradient: linear-gradient(135deg, #36CFC9 0%, #14B8A6 100%);
+            --accent: #FF7D00; --danger: #FF4D4F; --bg: #F4F7FC; --card: #FFFFFF;
+            --text-dark: #1D2129; --text-gray: #86909C; --border: #E5E6EB;
+            --radius-lg: 24px; --radius-md: 16px;
+            --shadow-sm: 0 4px 12px rgba(29, 33, 41, 0.03);
+            --shadow-md: 0 10px 30px rgba(29, 33, 41, 0.06);
+            --shadow-primary: 0 8px 20px rgba(22, 93, 255, 0.2);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--text-dark); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 85px; }
+        .app-header { background: var(--primary-gradient); color: white; padding: 30px 24px 45px 24px; border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg); box-shadow: 0 6px 20px rgba(22, 93, 255, 0.15); width: 100%; }
+        .header-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+        .header-subtitle { font-size: 13px; color: rgba(255, 255, 255, 0.85); font-weight: 400; }
+        main { padding: 0 20px; max-width: 480px; width: 100%; margin: -25px auto 0 auto; flex-grow: 1; }
+        .app-view { display: none; } .app-view.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: var(--card); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow-md); border: 1px solid rgba(229, 230, 235, 0.6); }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-bottom: 8px; }
+        .form-select, .form-input { width: 100%; background-color: #F7F8FA; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; font-size: 15px; color: var(--text-dark); outline: none; appearance: none; }
+        .select-wrapper { position: relative; } .select-wrapper::after { content: '\f107'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--text-gray); pointer-events: none; }
+        .form-select:focus, .form-input:focus { border-color: var(--primary); background-color: #fff; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .size-btn { background: #F7F8FA; border: 1.5px solid var(--border); padding: 12px 8px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; cursor: pointer; }
+        .size-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-main { width: 100%; background: var(--primary-gradient); color: white; border: none; padding: 16px; border-radius: var(--radius-md); font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px; }
+        .btn-download { background: var(--secondary-gradient); }
+        .upload-box { border: 2px dashed var(--light); background: rgba(22, 93, 255, 0.02); padding: 35px 20px; border-radius: var(--radius-md); text-align: center; cursor: pointer; }
+        .upload-box i { font-size: 42px; color: var(--primary); margin-bottom: 12px; }
+        .result-box { background: #F7F8FA; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-top: 16px; word-break: break-all; }
+        .result-title { font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-bottom: 6px; }
+        .result-text { font-size: 15px; font-weight: 500; }
+        .error-banner { background: #FFF1F0; border: 1px solid #FFA39E; color: var(--danger); border-radius: var(--radius-md); padding: 14px 16px; margin-top: 16px; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+        .limit-meter-container { background: #F7F8FA; border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .limit-text { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+        .limit-bar-bg { background: var(--border); height: 8px; border-radius: 4px; overflow: hidden; }
+        .limit-bar-fill { background: var(--primary-gradient); height: 100%; width: 0%; transition: width 0.3s ease; }
+        .output-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; background: #F7F8FA; border-radius: var(--radius-md); border: 1.5px dashed var(--border); margin-bottom: 20px; }
+        .output-wrapper-bg { padding: 12px; background: white; border-radius: 12px; box-shadow: var(--shadow-sm); max-width: 100%; overflow-x: auto; }
+        .watermark { font-size: 11px; color: var(--text-gray); font-weight: 500; margin-top: 16px; }
+        .history-list { display: flex; flex-direction: column; gap: 12px; }
+        .history-item { background: #F7F8FA; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .history-item-info { flex-grow: 1; min-width: 0; }
+        .history-item-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .badge-gen { background: #E6F4FF; color: var(--primary); padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 72px; background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(10px); border-top: 1px solid rgba(225, 226, 235, 0.8); display: flex; justify-content: space-around; z-index: 100; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04); }
+        .nav-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; height: 100%; color: var(--text-gray); cursor: pointer; gap: 5px; }
+        .nav-item i { font-size: 20px; } .nav-item span { font-size: 11px; font-weight: 600; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.premium-badge i { color: #FF7D00; }
+        .placeholder-screen { text-align: center; padding: 30px 20px; }
+        
+        .premium-instruction { background: #FFF7E6; border: 1px solid #FFD591; padding: 15px; border-radius: 12px; font-size: 13px; color: #D46B08; margin-bottom: 20px; text-align: left; line-height: 1.5; }
+        .premium-instruction a { font-weight: bold; color: var(--accent); text-decoration: none; }
+        .premium-success { background: #F6FFED; border: 1px solid #B7EB8F; color: #389E0D; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; display: none; }
+        
+        #qrcode-canvas { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+    </style>
+</head>
+<body>
+
+    <div class="app-header">
+        <div class="header-title">
+            <i class="fa-solid fa-qrcode"></i> QR Master
+        </div>
+        <div class="header-subtitle">All-In-One Client-Side Suite</div>
+    </div>
+
+    <main>
+        <div id="view-home" class="app-view active">
+            <div id="limit-container" class="limit-meter-container">
+                <div class="limit-text">
+                    <span>Daily Generation Limit (Free tier)</span>
+                    <span id="limit-count-display">0 / 5</span>
+                </div>
+                <div class="limit-bar-bg">
+                    <div id="limit-bar-fill" class="limit-bar-fill"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="form-group">
+                    <label class="form-label">Data Type</label>
+                    <div class="select-wrapper">
+                        <select id="qr-type" class="form-select" onchange="toggleWiFiInputs()">
+                            <option value="url">Website URL</option>
+                            <option value="text">Plain Text</option>
+                            <option value="wifi">WiFi Network</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" id="standard-input-group">
+                    <label class="form-label">Content Input</label>
+                    <input id="qr-input" type="text" placeholder="https://example.com" class="form-input">
+                </div>
+
+                <div id="wifi-input-group" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Network Name (SSID)</label>
+                        <input id="wifi-ssid" type="text" placeholder="My Home Network" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input id="wifi-password" type="password" placeholder="••••••••" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Security Type</label>
+                        <div class="select-wrapper">
+                            <select id="wifi-encryption" class="form-select">
+                                <option value="WPA">WPA/WPA2 (Standard)</option>
+                                <option value="WEP">WEP (Old)</option>
+                                <option value="nopass">None (Public)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Size Specification</label>
+                    <div class="grid-3">
+                        <button id="size-200" class="size-btn active" onclick="changeQrSize(200, 'size-200')">200px</button>
+                        <button id="size-300" class="size-btn" onclick="changeQrSize(300, 'size-300')">300px</button>
+                        <button id="size-400" class="size-btn" onclick="changeQrSize(400, 'size-400')">400px</button>
+                    </div>
+                </div>
+
+                <button id="btn-generate" class="btn-main" onclick="processQRData()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Code
+                </button>
+            </div>
+
+            <div id="qr-output-card" class="card" style="display: none;">
+                <div class="output-zone">
+                    <div class="output-wrapper-bg">
+                        <canvas id="qrcode-canvas"></canvas>
+                    </div>
+                    <div class="watermark"><i class="fa-solid fa-bolt"></i> Made with QR Master</div>
+                </div>
+                
+                <button class="btn-main btn-download" onclick="executePNGDownload()">
+                    <i class="fa-solid fa-arrow-down-to-line"></i> Download PNG
+                </button>
+            </div>
+        </div>
+
+        <div id="view-scan" class="app-view">
+            <div class="card">
+                <div class="upload-box" onclick="triggerPhotoSelection()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <h3>Scan Screenshot / Image</h3>
+                    <p>Upload an image or screenshot from your device gallery</p>
+                </div>
+                <input type="file" id="image-file-input" accept="image/*" style="display: none;" onchange="decodeUploadedImage(this)">
+                <div id="scan-error" class="error-banner" style="display: none;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>Could not find a valid QR code in this image.</span>
+                </div>
+                <div id="scan-result-card" class="result-box" style="display: none;">
+                    <div class="result-title">Decoded Content Output</div>
+                    <div id="scan-result-text" class="result-text"></div>
+                    <button class="btn-main" id="btn-action" style="padding: 10px 14px; font-size: 14px; margin-top: 14px;">
+                        <i class="fa-solid fa-copy"></i> Copy Content
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-barcode" class="app-view">
+            <div class="card">
+                <div class="form-group">
+                    <label class="form-label">Symbology Standard</label>
+                    <div class="select-wrapper">
+                        <select id="barcode-type" class="form-select">
+                            <option value="CODE128">Code 128 (Letters + Numbers)</option>
+                            <option value="EAN13">EAN-13 (Standard Retail - 13 Digits)</option>
+                            <option value="UPC">UPC-A (Standard Retail - 12 Digits)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Data Input String</label>
+                    <input id="barcode-input" type="text" placeholder="123456789012" class="form-input">
+                </div>
+                <button id="btn-generate-barcode" class="btn-main" onclick="processBarcodeData()">
+                    <i class="fa-solid fa-barcode"></i> Generate Barcode
+                </button>
+            </div>
+            <div id="barcode-output-card" class="card" style="display: none;">
+                <div class="output-zone">
+                    <div class="output-wrapper-bg">
+                        <canvas id="barcode-canvas"></canvas>
+                    </div>
+                    <div class="watermark"><i class="fa-solid fa-bolt"></i> Made with QR Master</div>
+                </div>
+                <button class="btn-main btn-download" onclick="executeBarcodePNGDownload()">
+                    <i class="fa-solid fa-arrow-down-to-line"></i> Download PNG
+                </button>
+            </div>
+        </div>
+
+        <div id="view-history" class="app-view">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="font-size: 16px; font-weight: 700;">Recent Actions</h3>
+                    <button onclick="clearAllDeviceLogs()" style="background: none; border: none; color: var(--danger); font-size: 13px; font-weight: 600; cursor: pointer;">Clear All</button>
+                </div>
+                <div id="history-feed" class="history-list"></div>
+            </div>
+        </div>
+
+        <div id="view-premium" class="app-view">
+            <div class="card placeholder-screen">
+                <i class="fa-solid fa-crown" style="color: var(--accent); opacity: 1;"></i>
+                <h2>Go Premium</h2>
+                
+                <div id="premium-unlocked-msg" class="premium-success">
+                    <i class="fa-solid fa-check-circle"></i> Premium Unlocked! Enjoy unlimited generations.
+                </div>
+
+                <div id="premium-purchase-area">
+                    <p style="margin-bottom: 20px; font-size: 14px; color: var(--text-gray);">
+                        Unlock Unlimited Daily Generations, SVG Exports, and Custom Colors.
+                    </p>
+                    
+                    <div class="premium-instruction">
+                        <strong>Step 1:</strong> Send an SMS with the word "PREMIUM" to <br>
+                        <a href="sms:+2347081669544?body=PREMIUM"><i class="fa-solid fa-message"></i> +234 708 166 9544</a><br><br>
+                        <strong>Step 2:</strong> Wait for a text back containing your unique 16-digit alphanumeric unlock code.
+                    </div>
+
+                    <div class="form-group" style="text-align: left;">
+                        <label class="form-label">Enter 16-Digit Code</label>
+                        <input id="premium-code-input" type="text" placeholder="e.g. A1B2C3D4E5F6G7H8" class="form-input" maxlength="16" style="text-transform: uppercase;">
+                    </div>
+
+                    <button class="btn-main" onclick="verifyPremiumCode()" style="background: var(--accent); box-shadow: 0 8px 20px rgba(255,125,0,0.3);">
+                        <i class="fa-solid fa-unlock-keyhole"></i> Verify & Unlock
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="navigateToPanel('home', this)"><i class="fa-solid fa-qrcode"></i><span>Home</span></button>
+        <button class="nav-item" onclick="navigateToPanel('scan', this)"><i class="fa-solid fa-expand"></i><span>Scan</span></button>
+        <button class="nav-item" onclick="navigateToPanel('barcode', this)"><i class="fa-solid fa-barcode"></i><span>Barcode</span></button>
+        <button class="nav-item" onclick="navigateToPanel('history', this)"><i class="fa-solid fa-history"></i><span>History</span></button>
+        <button class="nav-item premium-badge" onclick="navigateToPanel('premium', this)"><i class="fa-solid fa-crown"></i><span>Premium</span></button>
+    </nav>
+
+    <script>
+        let selectedWidth = 200;
+
+        // Secure Master Key List Array
+        const VALID_PREMIUM_PINS = [
+            "A1B2C3D4E5F6G7H8", "Z9Y8X7W6V5U4T3S2", "Q1W2E3R4T5Y6U7I8",
+            "M9N8B7V6C5X4Z3L2", "P0O9I8U7Y6T5R4E3", "L1K2J3H4G5F6D7S8",
+            "A9B8C7D6E5F4G3H2", "Z1Y2X3W4V5U6T7S8", "Q9W8E7R6T5Y4U3I2",
+            "M1N2B3V4C5X6Z7L8", "P1O2I3U4Y5T6R7E8", "L9K8J7H6G5F4D3S2",
+            "1A2B3C4D5E6F7G8H", "9Z8Y7X6W5V4U3T2S", "1Q2W3E4R5T6Y7U8I",
+            "9M8N7B6V5C4X3Z2L", "0P9O8I7U6Y5T4R3E", "1L2K3J4H5G6F7D8S",
+            "9A8B7C6D5E4F3G2H", "1Z2Y3X4W5V6U7T8S", "9Q8W7E6R5T4Y3U2I",
+            "1M2N3B4V5C6X7Z8L", "1P2O3I4U5Y6T7R8E", "9L8K7J6H5G4F3D2S",
+            "XY12ZA34BC56DE78", "98ED76CB54A321YX", "MN12PQ34RS56TU78",
+            "87UT65SR43QP21NM", "FG12HI34JK56LM78", "87ML65KJ43IH21GF"
+        ];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            checkPremiumStatus();
+            updateLimitMeterUI();
+            renderHistoryLogsFeed();
+        });
+
+        function navigateToPanel(panelId, targetNode) {
+            document.querySelectorAll('.app-view').forEach(panel => panel.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`view-${panelId}`).classList.add('active');
+            targetNode.classList.add('active');
+            if (panelId === 'history') renderHistoryLogsFeed();
+        }
+
+        /* --- Rate Limiter & Subscription Handlers --- */
+        function checkPremiumStatus() {
+            const isPremium = localStorage.getItem('qrmaster_premium') === 'true';
+            if (isPremium) {
+                document.getElementById('limit-container').style.display = 'none';
+                document.getElementById('premium-purchase-area').style.display = 'none';
+                document.getElementById('premium-unlocked-msg').style.display = 'block';
+            }
+        }
+
+        function checkGenerationThrottleLimit() {
+            if (localStorage.getItem('qrmaster_premium') === 'true') return true; 
+            
+            const currentTimestamp = Date.now();
+            let usageTracker = JSON.parse(localStorage.getItem('qrmaster_limit_tracker')) || { generationTimestamps: [] };
+            usageTracker.generationTimestamps = usageTracker.generationTimestamps.filter(time => (currentTimestamp - time) < 24 * 60 * 60 * 1000);
+            
+            if (usageTracker.generationTimestamps.length >= 5) return false;
+            
+            usageTracker.generationTimestamps.push(currentTimestamp);
+            localStorage.setItem('qrmaster_limit_tracker', JSON.stringify(usageTracker));
+            updateLimitMeterUI();
+            return true;
+        }
+
+        function updateLimitMeterUI() {
+            if (localStorage.getItem('qrmaster_premium') === 'true') return;
+            const currentTimestamp = Date.now();
+            let usageTracker = JSON.parse(localStorage.getItem('qrmaster_limit_tracker')) || { generationTimestamps: [] };
+            usageTracker.generationTimestamps = usageTracker.generationTimestamps.filter(time => (currentTimestamp - time) < 24 * 60 * 60 * 1000);
+            const activeCount = usageTracker.generationTimestamps.length;
+            const percentageWidth = (activeCount / 5) * 100;
+            document.getElementById('limit-count-display').innerText = `${activeCount} / 5`;
+            document.getElementById('limit-bar-fill').style.width = `${percentageWidth}%`;
+        }
+
+        function verifyPremiumCode() {
+            const code = document.getElementById('premium-code-input').value.trim().toUpperCase();
+            
+            // Hard lookup validation against database array
+            if(VALID_PREMIUM_PINS.includes(code)) {
+                localStorage.setItem('qrmaster_premium', 'true');
+                checkPremiumStatus();
+                alert('Premium Access Granted!');
+            } else {
+                alert('Invalid Code. Please ensure you entered a verified 16-digit unlock code.');
+            }
+        }
+
+        /* --- QR Code Operations --- */
+        function toggleWiFiInputs() {
+            const type = document.getElementById('qr-type').value;
+            if (type === 'wifi') {
+                document.getElementById('standard-input-group').style.display = 'none';
+                document.getElementById('wifi-input-group').style.display = 'block';
+            } else {
+                document.getElementById('standard-input-group').style.display = 'block';
+                document.getElementById('wifi-input-group').style.display = 'none';
+            }
+        }
+
+        function changeQrSize(pixels, componentId) {
+            selectedWidth = pixels;
+            document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(componentId).classList.add('active');
+        }
+
+        function processQRData() {
+            const type = document.getElementById('qr-type').value;
+            let finalString = "";
+
+            if (type === 'wifi') {
+                const ssid = document.getElementById('wifi-ssid').value.trim();
+                const pass = document.getElementById('wifi-password').value;
+                const enc = document.getElementById('wifi-encryption').value;
+                if (!ssid) return alert("Network Name (SSID) is required.");
+                finalString = `WIFI:S:${ssid};T:${enc};P:${pass};H:false;;`;
+            } else {
+                finalString = document.getElementById('qr-input').value.trim();
+                if (!finalString) return alert('Please enter content first.');
+            }
+
+            if (!checkGenerationThrottleLimit()) {
+                alert('Daily Limit Reached! Upgrade to Premium.');
+                navigateToPanel('premium', document.querySelector('.premium-badge'));
+                return;
+            }
+
+            const canvasTarget = document.getElementById('qrcode-canvas');
+            document.getElementById('qr-output-card').style.display = 'block';
+
+            QRCode.toCanvas(canvasTarget, finalString, {
+                width: selectedWidth,
+                margin: 2,
+                color: {
+                    dark: "#000000",
+                    light: "#ffffff"
+                }
+            }, function (error) {
+                if (error) {
+                    console.error(error);
+                    alert("Matrix construction fault encountered.");
+                }
+            });
+            
+            pushTrackingItemToLogs(type === 'wifi' ? 'Generated WiFi QR' : 'Generated QR', type === 'wifi' ? document.getElementById('wifi-ssid').value : finalString, 'gen');
+        }
+
+        function executePNGDownload() {
+            const canvas = document.getElementById('qrcode-canvas');
+            if (!canvas) return;
+            const trackingAnchorNode = document.createElement('a');
+            trackingAnchorNode.href = canvas.toDataURL("image/png");
+            trackingAnchorNode.download = `qrmaster_${Date.now()}.png`;
+            document.body.appendChild(trackingAnchorNode);
+            trackingAnchorNode.click();
+            document.body.removeChild(trackingAnchorNode);
+        }
+
+        /* --- QR Scanner Module --- */
+        function triggerPhotoSelection() { document.getElementById('image-file-input').click(); }
+
+        function decodeUploadedImage(inputNode) {
+            const file = inputNode.files[0];
+            if (!file) return;
+
+            document.getElementById('scan-error').style.display = 'none';
+            document.getElementById('scan-result-card').style.display = 'none';
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width; canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: "dontInvert" });
+                    
+                    if (code) displayScannerSuccess(code.data);
+                    else document.getElementById('scan-error').style.display = 'block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            inputNode.value = '';
+        }
+
+        function displayScannerSuccess(payload) {
+            document.getElementById('scan-result-text').innerText = payload;
+            document.getElementById('scan-result-card').style.display = 'block';
+            pushTrackingItemToLogs('Scanned Image', payload, 'gen');
+
+            const btn = document.getElementById('btn-action');
+            if (payload.startsWith('http')) {
+                btn.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i> Open Link';
+                btn.onclick = () => window.open(payload, '_blank');
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy Content';
+                btn.onclick = () => { navigator.clipboard.writeText(payload); alert('Copied!'); };
+            }
+        }
+
+        /* --- Barcode Generator Module --- */
+        function processBarcodeData() {
+            const trackingStringValue = document.getElementById('barcode-input').value.trim();
+            const formatSelectedType = document.getElementById('barcode-type').value;
+            const outputCardContainer = document.getElementById('barcode-output-card');
+
+            if (!trackingStringValue) {
+                alert('Please input a tracking string sequence first.');
+                return;
+            }
+
+            if (!checkGenerationThrottleLimit()) {
+                alert('Daily Generation Limit Reached! Upgrade to Premium.');
+                navigateToPanel('premium', document.querySelector('.premium-badge'));
+                return;
+            }
+
+            try {
+                JsBarcode("#barcode-canvas", trackingStringValue, {
+                    format: formatSelectedType,
+                    lineColor: "#000000",
+                    width: 2,
+                    height: 80,
+                    displayValue: true,
+                    margin: 10
+                });
+                
+                outputCardContainer.style.display = 'block';
+                pushTrackingItemToLogs(`Generated ${formatSelectedType}`, trackingStringValue, 'gen');
+                
+            } catch (error) {
+                alert(`Error generating barcode: Make sure your input matches the ${formatSelectedType} standard. (e.g., EAN13 requires exactly 12 or 13 numbers).`);
+            }
+        }
+
+        function executeBarcodePNGDownload() {
+            const canvas = document.getElementById('barcode-canvas');
+            const trackingAnchorNode = document.createElement('a');
+            trackingAnchorNode.href = canvas.toDataURL("image/png");
+            trackingAnchorNode.download = `barcode_${Date.now()}.png`;
+            document.body.appendChild(trackingAnchorNode);
+            trackingAnchorNode.click();
+            document.body.removeChild(trackingAnchorNode);
+        }
+
+        /* --- Local History Logging --- */
+        function pushTrackingItemToLogs(title, data, type) {
+            let history = JSON.parse(localStorage.getItem('qrmaster_history')) || [];
+            history.unshift({ title, data, type, time: new Date().toLocaleString() });
+            if (history.length > 20) history.pop();
+            localStorage.setItem('qrmaster_history', JSON.stringify(history));
+            if(document.getElementById('view-history').classList.contains('active')) renderHistoryLogsFeed();
+        }
+
+        function renderHistoryLogsFeed() {
+            const history = JSON.parse(localStorage.getItem('qrmaster_history')) || [];
+            const feed = document.getElementById('history-feed');
+            feed.innerHTML = '';
+            
+            if (history.length === 0) {
+                feed.innerHTML = '<p style="text-align:center; color:gray; font-size:13px; padding: 20px;">No history available yet.</p>';
+                return;
+            }
+
+            history.forEach(item => {
+                feed.innerHTML += `
+                    <div class="history-item">
+                        <div class="history-item-info">
+                            <div class="history-item-title">${item.data}</div>
+                            <div class="history-item-meta">${item.time}</div>
+                        </div>
+                        <div class="history-item-badge badge-${item.type}">${item.title}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function clearAllDeviceLogs() {
+            if(confirm("Are you sure you want to clear your history?")) {
+                localStorage.removeItem('qrmaster_history');
+                renderHistoryLogsFeed();
+            }
+        }
+    </script>
+</body>
+</html>
